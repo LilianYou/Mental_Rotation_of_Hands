@@ -1,0 +1,223 @@
+---
+title: "Handedness_Step1_3_2ACC"
+output: pdf_document
+---
+```{r}
+library(readr)
+library(psych)
+library(tidyr)
+library(nlme)
+library(multcomp)
+library(ggpubr)
+library(ggplot2)
+library(lme4)
+library(lsmeans)
+library(afex)
+library(dplyr)
+```
+descriptive stats
+```{r}
+Logfile <- read_csv("~/Desktop/Handedness/Data_new/Step2/DLR.csv")
+View(Logfile)
+str(Logfile)
+summary(Logfile)
+```
+```{r}
+
+Logfile$subject <- as.factor(Logfile$subject)
+str(Logfile)
+# define between and within subjects variables
+
+# define between and within subjects variables
+Logfile$handedness <- factor(Logfile$handedness,
+                                            levels = c(0,1),
+                                            labels = c("Lefty","Righty"))
+
+Logfile$Lat2 <- factor(Logfile$Lat2,
+                                            levels = c(0,1),
+                                            labels = c("Lefty","Righty"))
+
+Logfile$Strength <- factor(Logfile$Strength,
+                                            levels = c(0,1),
+                                            labels = c("Mixed","Extreme"))
+
+Logfile$sex <- factor(Logfile$sex,
+                                            levels = c(0,1),
+                                            labels = c("Female","Male"))
+
+Logfile$version <- factor(Logfile$version,
+                                         levels = c(1,2),
+                                         labels = c("Response with Left Finger","Response with Right Finger"))
+
+
+Logfile$Dtype <- factor(Logfile$Dtype,
+                                          levels = c(0,1),
+                                          labels = c("LR","RL"))
+
+
+Logfile$SDGesture <- factor(Logfile$SDGesture,
+                                          levels = c(0,1),
+                                          labels = c("Same Gesture","Different Gesture"))
+
+Logfile$Strategy <- factor(Logfile$Strategy,
+                                          levels = c(0,1,2),
+                                          labels = c("Mental Rotation","Thumb Strategy","Both"))
+#final check the data 
+str(Logfile)
+View(Logfile)
+# Get descriptives
+Means.Table<-describe(Logfile)
+
+Means.Table #call the object to see the means table
+
+#use knitr function to call the object to see the means table.
+knitr::kable(Means.Table, digits = 2, caption = 'Mixed Means Table')
+
+```
+
+
+
+**ACC**
+
+0. SDGesture
+```{r}
+SDGesture_acc <- aov_car(ACC~SDGesture+
+            Error(subject/SDGesture),  data=Logfile, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(SDGesture_acc)) ##call for formatted ANOVA table using knitr
+```
+```{r}
+Lat2_Strength_acc <- aov_car(ACC~Dtype*Lat2*Strength+
+            Error(subject/(Dtype)),  data=Logfile, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(Lat2_Strength_acc)) ##call for formatted ANOVA table using knitr
+```
+
+*version*
+```{r}
+Lat2_Strength_version_acc <- aov_car(ACC~Dtype*Lat2*Strength*version+
+            Error(subject/(Dtype)),  data=Logfile, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(Lat2_Strength_version_acc)) ##call for formatted ANOVA table using knitr
+```
+
+
+```{r}
+Lat2_Strength_version_acc_Interaction<-lsmeans(Lat2_Strength_version_acc, ~Dtype|(Strength*version))
+Lat2_Strength_version_acc_Interaction
+```
+
+```{r}
+pairs(Lat2_Strength_version_acc_Interaction)
+```
+
+```{r}
+update(pairs(Lat2_Strength_version_acc_Interaction, by = "Dtype"), by = NULL)
+```
+
+*strategy*
+```{r}
+STR <- filter(Logfile, Strategy == "Mental Rotation"|Strategy == "Thumb Strategy")
+```
+
+```{r}
+Lat2_Strength_Strategy_acc <- aov_car(ACC~Dtype*Lat2*Strength*Strategy+
+            Error(subject/(Dtype)),  data=STR, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(Lat2_Strength_Strategy_acc)) ##call for formatted ANOVA table using knitr
+```
+```{r}
+Lat2_Strategy_acc_Interaction<-lsmeans(Lat2_Strength_Strategy_acc, ~(Lat2*Strategy))
+Lat2_Strategy_acc_Interaction
+```
+
+```{r}
+pairs(Lat2_Strategy_acc_Interaction)
+```
+
+```{r}
+Strength_Strategy_acc_Interaction<-lsmeans(Lat2_Strength_Strategy_acc, ~(Strength*Strategy))
+Strength_Strategy_acc_Interaction
+```
+
+```{r}
+pairs(Strength_Strategy_acc_Interaction)
+```
+
+2. Different Hand Same Gesture
+
+```{r}
+S_Ges <- Logfile %>% 
+  filter(SDGesture == "Same Gesture")
+```
+
+```{r}
+S_Ges_Lat2_Strength_version_acc <- aov_car(ACC~Dtype*Lat2*Strength*version+
+            Error(subject/(Dtype)),  data=S_Ges, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(S_Ges_Lat2_Strength_version_acc)) ##call for formatted ANOVA table using knitr
+```
+
+
+
+2.1 Different Hand Palm-Palm
+```{r}
+Pa_Ges <- S_Ges %>% 
+  filter(category == "2"|category == "6")
+```
+
+```{r}
+Pa_Ges_Lat2_Strength_version_acc <- aov_car(ACC~Dtype*Lat2*Strength*version+
+            Error(subject/(Dtype)),  data=Pa_Ges, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(Pa_Ges_Lat2_Strength_version_acc)) ##call for formatted ANOVA table using knitr
+```
+
+
+2.2 Different Hand Pointer-Pointer
+```{r}
+Po_Ges <- S_Ges %>% 
+  filter(category == "4"|category == "8")
+```
+
+```{r}
+Po_Ges_Lat2_Strength_version_acc <- aov_car(ACC~Dtype*Lat2*Strength*version+
+            Error(subject/(Dtype)),  data=Po_Ges, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(Po_Ges_Lat2_Strength_version_acc)) ##call for formatted ANOVA table using knitr
+```
+
+3 Different Hand Different Gesture
+```{r}
+D_Ges <- Logfile %>% 
+  filter(SDGesture == "Different Gesture")
+```
+
+```{r}
+D_Ges_Lat2_Strength_version_acc <- aov_car(ACC~Dtype*Lat2*Strength*version+
+            Error(subject/(Dtype)),  data=D_Ges, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(D_Ges_Lat2_Strength_version_acc)) ##call for formatted ANOVA table using knitr
+```
+
+```{r}
+Interaction4 <-lsmeans(D_Ges_Lat2_Strength_version_acc, ~(Dtype|Lat2*Strength))
+Interaction4
+```
+
+```{r}
+pairs(Interaction4)
+```
+
+```{r}
+update(pairs(Interaction4, by = "Dtype"), by = NULL)
+```
+
+```{r}
+Interaction5 <-lsmeans(D_Ges_Lat2_Strength_version_acc, ~(Dtype))
+Interaction5
+```
+
+```{r}
+pairs(Interaction5)
+```

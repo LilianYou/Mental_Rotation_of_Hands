@@ -1,0 +1,181 @@
+---
+title: "Handedness_Step1_3_2ACC"
+output: pdf_document
+---
+```{r}
+library(readr)
+library(psych)
+library(tidyr)
+library(nlme)
+library(multcomp)
+library(ggpubr)
+library(ggplot2)
+library(lme4)
+library(lsmeans)
+library(afex)
+library(dplyr)
+```
+descriptive stats
+```{r}
+Logfile <- read_csv("~/Desktop/Handedness/Data_new/Step2/DLR.csv")
+View(Logfile)
+str(Logfile)
+summary(Logfile)
+```
+```{r}
+
+Logfile$subject <- as.factor(Logfile$subject)
+str(Logfile)
+# define between and within subjects variables
+
+# define between and within subjects variables
+Logfile$handedness <- factor(Logfile$handedness,
+                                            levels = c(0,1),
+                                            labels = c("Lefty","Righty"))
+
+Logfile$Lat2 <- factor(Logfile$Lat2,
+                                            levels = c(0,1),
+                                            labels = c("Lefty","Righty"))
+
+Logfile$Strength <- factor(Logfile$Strength,
+                                            levels = c(0,1),
+                                            labels = c("Mixed","Extreme"))
+
+Logfile$sex <- factor(Logfile$sex,
+                                            levels = c(0,1),
+                                            labels = c("Female","Male"))
+
+Logfile$version <- factor(Logfile$version,
+                                         levels = c(1,2),
+                                         labels = c("Response with Left Finger","Response with Right Finger"))
+
+
+Logfile$Dtype <- factor(Logfile$Dtype,
+                                          levels = c(0,1),
+                                          labels = c("LR","RL"))
+
+
+Logfile$SDGesture <- factor(Logfile$SDGesture,
+                                          levels = c(0,1),
+                                          labels = c("Same Gesture","Different Gesture"))
+
+#final check the data 
+str(Logfile)
+View(Logfile)
+# Get descriptives
+Means.Table<-describe(Logfile)
+
+Means.Table #call the object to see the means table
+
+#use knitr function to call the object to see the means table.
+knitr::kable(Means.Table, digits = 2, caption = 'Mixed Means Table')
+
+```
+
+
+
+**RT**
+
+0. SDGesture
+```{r}
+SDGesture_rt <- aov_car(RT~SDGesture+
+            Error(subject/SDGesture),  na.rm = TRUE, data=Logfile, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(SDGesture_rt)) ##call for formatted ANOVA table using knitr
+```
+
+```{r}
+Lat2_Strength_version_rt <- aov_car(RT~Dtype*Lat2*Strength*version+
+            Error(subject/(Dtype)),  data=Logfile, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(Lat2_Strength_version_rt)) ##call for formatted ANOVA table using knitr
+```
+
+
+2. Different Hand Same Gesture
+
+```{r}
+S_Ges <- Logfile %>% 
+  filter(SDGesture == "Same Gesture")
+```
+
+```{r}
+S_Ges_Lat2_Strength_version_rt <- aov_car(RT~Dtype*Lat2*Strength*version+
+            Error(subject/(Dtype)),  data=S_Ges, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(S_Ges_Lat2_Strength_version_rt)) ##call for formatted ANOVA table using knitr
+```
+
+```{r}
+Lat2_Strength_version_rt_Interaction<-lsmeans(S_Ges_Lat2_Strength_version_rt, ~Dtype|(version))
+Lat2_Strength_version_rt_Interaction
+```
+
+```{r}
+pairs(Lat2_Strength_version_rt_Interaction)
+```
+
+```{r}
+update(pairs(Lat2_Strength_version_rt_Interaction, by = "Dtype"), by = NULL)
+```
+
+2.1 Different Hand Palm-Palm
+```{r}
+Pa_Ges <- S_Ges %>% 
+  filter(category == "2"|category == "6")
+```
+
+```{r}
+Pa_Ges_Lat2_Strength_version_RT <- aov_car(RT~Dtype*Lat2*Strength*version+
+            Error(subject/(Dtype)),  data=Pa_Ges, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(Pa_Ges_Lat2_Strength_version_RT)) ##call for formatted ANOVA table using knitr
+```
+
+
+
+2.2 Different Hand Pointer-Pointer
+```{r}
+Po_Ges <- S_Ges %>% 
+  filter(category == "4"|category == "8")
+```
+
+```{r}
+Po_Ges_Lat2_Strength_version_RT <- aov_car(RT~Dtype*Lat2*Strength*version+
+            Error(subject/(Dtype)),  data=Po_Ges, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(Po_Ges_Lat2_Strength_version_RT)) ##call for formatted ANOVA table using knitr
+```
+```{r}
+Interaction1 <-lsmeans(Po_Ges_Lat2_Strength_version_RT, ~(Dtype))
+Interaction1
+```
+
+```{r}
+pairs(Interaction1)
+```
+
+```{r}
+Interaction2 <-lsmeans(Po_Ges_Lat2_Strength_version_RT, ~(Dtype|version))
+Interaction2
+```
+
+```{r}
+pairs(Interaction2)
+```
+
+
+
+3 Different Hand Different Gesture
+```{r}
+D_Ges <- Logfile %>% 
+  filter(SDGesture == "Different Gesture")
+```
+
+```{r}
+D_Ges_Lat2_Strength_version_RT <- aov_car(RT~Dtype*Lat2*Strength*version+
+            Error(subject/(Dtype)),  data=D_Ges, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(D_Ges_Lat2_Strength_version_RT)) ##call for formatted ANOVA table using knitr
+```
+

@@ -1,0 +1,56 @@
+---
+title: "Strategy"
+output: pdf_document
+---
+
+```{r}
+library(readr)
+library(psych)
+library(tidyr)
+library(nlme)
+library(multcomp)
+library(ggpubr)
+library(ggplot2)
+library(lme4)
+library(lsmeans)
+library(afex)
+library(dplyr)
+library(stargazer)
+library(MASS)
+```
+descriptive stats
+```{r}
+Logfile <- read_csv("~/Desktop/Handedness/Data/Step3/strategy.csv")
+View(Logfile)
+str(Logfile)
+summary(Logfile)
+```
+
+
+```{r}
+tb1 = table(Logfile$Strength,Logfile$Strategy)
+tb1
+```
+chi-square test independence of 4 handedness categories
+
+```{r}
+chisq.test(tb1)
+```
+chi-square test independence of handedness direction
+```{r}
+ctb_direction = cbind(tb1["el",]+tb1["ml",],tb1["mr",]+tb1["er",])
+ctb_direction
+```
+```{r}
+chisq.test(ctb_direction)
+```
+chi-square test independence of handedness strength
+```{r}
+ctb_strength = cbind(tb1["el",]+tb1["er",],tb1["mr",]+tb1["ml",])
+ctb_strength
+```
+
+```{r}
+chisq.test(ctb_strength)
+```
+

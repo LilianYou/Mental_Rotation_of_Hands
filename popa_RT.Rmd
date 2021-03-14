@@ -1,0 +1,38 @@
+---
+title: "Popa_RT"
+author: "Lily Cheng"
+date: "12/14/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(psych)
+library(tidyr)
+library(nlme)
+library(multcomp)
+library(ggpubr)
+library(ggplot2)
+library(lme4)
+library(lsmeans)
+library(afex)
+library(dplyr)
+library(stargazer)
+```
+descriptive stats
+```{r}
+Logfile <- read_csv("~/Desktop/Handedness/Data/Step1/popa_RT.csv")
+View(Logfile)
+str(Logfile)
+summary(Logfile)
+```
+
+RT
+```{r}
+t_gesture <- t.test(Logfile$palm, Logfile$pointer, paired = TRUE, var.equal = TRUE)
+t_gesture
+```

@@ -1,0 +1,147 @@
+---
+title: "step0_2"
+author: "Lily Cheng"
+date: "11/27/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(psych)
+library(tidyr)
+library(nlme)
+library(multcomp)
+library(ggpubr)
+library(ggplot2)
+library(lme4)
+library(lsmeans)
+library(afex)
+library(dplyr)
+library(stargazer)
+library(effsize)
+library(pwr)
+library(lsr)
+```
+
+descriptive stats
+```{r}
+Logfile <- read_csv("~/Desktop/Handedness/Data_new/Step0/paired_t_acc_rt.csv")
+View(Logfile)
+str(Logfile)
+summary(Logfile)
+```
+
+```{r}
+psych::describe(Logfile$same_hand_rt)
+psych::describe(Logfile$dif_hand_rt)
+```
+```{r}
+psych::describe(Logfile$same_gesture_rt)
+psych::describe(Logfile$dif_gesture_rt)
+```
+
+SD acc
+```{r}
+t_SD <- t.test(Logfile$same_hand_a, Logfile$diff_hand_a, paired = TRUE, var.equal = TRUE)
+t_SD
+```
+
+```{r}
+psych::describe(Logfile$same_hand_a)
+psych::describe(Logfile$diff_hand_a)
+```
+
+```{r}
+effect_size_sd <- effsize::cohen.d(Logfile$same_hand_a, Logfile$diff_hand_a, paired = TRUE, na.rm = TRUE)
+effect_size_sd
+```
+
+SD rt
+
+```{r}
+t_sd_rt <- t.test(Logfile$same_hand_rt, Logfile$dif_hand_rt, paired = TRUE, var.equal = TRUE)
+t_sd_rt
+```
+
+```{r}
+psych::describe(Logfile$same_hand_rt)
+psych::describe(Logfile$dif_hand_rt)
+```
+
+```{r}
+effect_size_sd_rt <- effsize::cohen.d(Logfile$same_hand_rt, Logfile$dif_hand_rt, paired = TRUE, na.rm = TRUE)
+effect_size_sd_rt
+```
+
+SDGesture acc
+```{r}
+t_gesture_acc <- t.test(Logfile$same_gesture_a, Logfile$dif_gesture_a, paired = TRUE, var.equal = TRUE)
+t_gesture_acc
+```
+
+```{r}
+psych::describe(Logfile$same_gesture_a)
+psych::describe(Logfile$dif_gesture_a)
+```
+
+```{r}
+effect_size_gesture_a <- effsize::cohen.d(Logfile$same_gesture_a, Logfile$dif_gesture_a, paired = TRUE, na.rm = TRUE)
+effect_size_gesture_a
+```
+
+SDGesture rt
+
+```{r}
+t_gesture_rt <- t.test(Logfile$same_gesture_rt, Logfile$dif_gesture_rt, paired = TRUE, var.equal = TRUE)
+t_gesture_rt
+```
+
+```{r}
+psych::describe(Logfile$same_gesture_rt)
+psych::describe(Logfile$dif_gesture_rt)
+```
+
+```{r}
+effect_size_gesture_rt <- effsize::cohen.d(Logfile$same_gesture_rt, Logfile$dif_gesture_rt, paired = TRUE, na.rm = TRUE)
+effect_size_gesture_rt
+```
+
+Palm vs. Pointer acc
+```{r}
+t_popa_acc <- t.test(Logfile$palm_a, Logfile$pointer_a, paired = TRUE, var.equal = TRUE)
+t_popa_acc
+```
+
+```{r}
+psych::describe(Logfile$palm_a)
+psych::describe(Logfile$pointer_a)
+```
+
+```{r}
+effect_size_popa_a <- effsize::cohen.d(Logfile$palm_a, Logfile$pointer_a, paired = TRUE, na.rm = TRUE)
+effect_size_popa_a
+```
+
+palm vs. pointer rt
+
+```{r}
+t_popa_rt <- t.test(Logfile$palm_rt, Logfile$pointer_rt, paired = TRUE, var.equal = TRUE)
+t_popa_rt
+```
+
+```{r}
+psych::describe(Logfile$palm_rt)
+psych::describe(Logfile$pointer_rt)
+```
+
+```{r}
+effect_size_popa_rt <- effsize::cohen.d(Logfile$palm_rt, Logfile$pointer_rt, paired = TRUE, na.rm = TRUE)
+effect_size_popa_rt
+```
+
+
+

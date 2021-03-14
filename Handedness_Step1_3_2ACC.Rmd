@@ -1,0 +1,894 @@
+---
+title: "Handedness_Step1_3_2ACC"
+output:
+  word_document: default
+  pdf_document: default
+---
+```{r}
+library(readr)
+library(psych)
+library(tidyr)
+library(nlme)
+library(multcomp)
+library(ggpubr)
+library(ggplot2)
+library(lme4)
+library(lsmeans)
+library(afex)
+library(dplyr)
+```
+descriptive stats
+```{r}
+#Logfile <- read_csv("~/Desktop/Handedness/Data_new/Step1/SLR_GestureType_prior.csv")
+Logfile <- read_csv("~/Desktop/Handedness/Data_new/Step1/SLR_GestureType.csv")
+
+View(Logfile)
+str(Logfile)
+summary(Logfile)
+```
+```{r}
+
+Logfile$subject <- as.factor(Logfile$subject)
+str(Logfile)
+# define between and within subjects variables
+
+# define between and within subjects variables
+Logfile$handedness <- factor(Logfile$handedness,
+                                            levels = c(0,1),
+                                            labels = c("Lefty","Righty"))
+
+Logfile$Lat2 <- factor(Logfile$Lat2,
+                                            levels = c(0,1),
+                                            labels = c("Lefty","Righty"))
+
+Logfile$Strength <- factor(Logfile$Strength,
+                                            levels = c(0,1),
+                                            labels = c("Mixed","Extreme"))
+
+Logfile$sex <- factor(Logfile$sex,
+                                            levels = c(0,1),
+                                            labels = c("Female","Male"))
+
+Logfile$version <- factor(Logfile$version,
+                                         levels = c(1,2),
+                                         labels = c("Response with Left Finger","Response with Right Finger"))
+
+
+
+Logfile$SLR <- factor(Logfile$SLR,
+                                          levels = c(0,1),
+                                          labels = c("Left Hands","Right Hands"))
+
+
+#Logfile$GestureType <- factor(Logfile$GestureType,
+                                #         levels = c(0,1),
+                                 #       labels = c("Palm","Pointer"))
+
+Logfile$Strategy <- factor(Logfile$Strategy,
+                                          levels = c(0,1,2),
+                                          labels = c("Mental Rotation","Thumb Strategy","Both"))
+
+
+#final check the data 
+str(Logfile)
+View(Logfile)
+# Get descriptives
+Means.Table<-describe(Logfile)
+
+Means.Table #call the object to see the means table
+
+#use knitr function to call the object to see the means table.
+knitr::kable(Means.Table, digits = 2, caption = 'Mixed Means Table')
+
+```
+
+
+** descriptive analysis **
+
+```{r}
+Left_Finger <- filter(Logfile, version == "Response with Left Finger")
+psych::describe(Left_Finger$ACC)
+
+Left_Finger_LH <- filter(Left_Finger, SLR == "Left Hands")
+psych::describe(Left_Finger_LH$ACC)
+
+Left_Finger_RH <- filter(Left_Finger, SLR == "Right Hands")
+psych::describe(Left_Finger_RH$ACC)
+
+Right_Finger <- filter(Logfile, version == "Response with Right Finger")
+psych::describe(Right_Finger$ACC)
+```
+
+
+```{r}
+eRHR <- filter(Logfile, Lat2 == "Righty",
+               Strength == "Extreme")
+psych::describe(eRHR$ACC)
+
+
+eRHR_R <- filter(eRHR, SLR == "Right Hands")
+psych::describe(eRHR_R$ACC)
+
+# eRHR_PA <- filter(eRHR, GestureType == "Palm")
+# psych::describe(eRHR_PA$ACC)
+# 
+# eRHR_Po <- filter(eRHR, GestureType == "Pointer")
+# psych::describe(eRHR_Po$ACC)
+
+```
+
+```{r}
+eLHR <- filter(Logfile, Lat2 == "Lefty",
+               Strength == "Extreme")
+psych::describe(eLHR$ACC)
+
+eLHR_R <- filter(eLHR, SLR == "Right Hands")
+psych::describe(eLHR_R$ACC)
+
+# eLHR_pa <- filter(eLHR, GestureType == "Palm")
+# psych::describe(eLHR_pa$ACC)
+
+
+```
+
+```{r}
+mRHR_L <- filter(Logfile, Lat2 == "Righty",
+               Strength == "Mixed",
+               SLR == "Left Hands")
+psych::describe(mRHR_L$ACC)
+psych::describe(mRHR_L$RT)
+
+
+mRHR_R <- filter(Logfile, Lat2 == "Righty",
+               Strength == "Mixed",
+               SLR == "Right Hands")
+psych::describe(mRHR_R$ACC)
+psych::describe(mRHR_R$RT)
+
+
+```
+
+```{r}
+mHR_Left_Finger <- filter(Logfile, Strength == "Mixed",
+                          version == "Response with Left Finger")
+
+mHR_Left_Finger_LH <- filter(mHR_Left_Finger, SLR == "Left Hands")
+psych::describe(mHR_Left_Finger_LH$ACC)
+
+mHR_Left_Finger_RH <- filter(mHR_Left_Finger, SLR == "Right Hands")
+psych::describe(mHR_Left_Finger_RH$ACC)
+
+```
+
+
+```{r}
+# mHR_Po <- filter(Logfile, Strength == "Mixed",
+#            GestureType == "Pointer")
+# mHR_Po_R <- filter(mHR_Po, SLR == "Right Hands")
+# psych::describe(mHR_Po_R$RT)
+# 
+# mHR_Po_L <- filter(mHR_Po, SLR == "Left Hands")
+# psych::describe(mHR_Po_L$RT)
+
+```
+
+```{r}
+mLHR_R <- filter(Logfile, Lat2 == "Lefty",
+               Strength == "Mixed",
+               SLR == "Right Hands")
+psych::describe(mLHR_R$ACC)
+
+```
+
+```{r}
+# Pa <- filter(Logfile, GestureType == "Palm")
+# 
+# Pa_RHR <- filter(Pa, Lat2 == "Righty")
+# psych::describe(Pa_RHR$ACC)
+# 
+# Pa_eRHR <- filter(Pa_RHR, Strength == "Extreme")
+# psych::describe(Pa_eRHR$ACC)
+# 
+# Pa_eRHR_RH <- filter(Pa_eRHR, SLR == "Right Hands")
+# psych::describe(Pa_eRHR_RH$ACC)
+# 
+# Pa_eRHR_LH <- filter(Pa_eRHR, SLR == "Left Hands")
+# psych::describe(Pa_eRHR_LH$ACC)
+# 
+# Pa_mRHR <- filter(Pa_RHR, Strength == "Mixed")
+# psych::describe(Pa_mRHR$ACC)
+# 
+# Pa_mRHR_RH <- filter(Pa_mRHR, SLR == "Right Hands")
+# psych::describe(Pa_mRHR_RH$ACC)
+# 
+# Pa_mRHR_LH <- filter(Pa_mRHR, SLR == "Left Hands")
+# psych::describe(Pa_mRHR_LH$ACC)
+# 
+# Pa_LHR <- filter(Pa, Lat2 == "Lefty")
+# psych::describe(Pa_LHR$ACC)
+# 
+# Pa_eLHR <- filter(Pa_LHR, Strength == "Extreme")
+# psych::describe(Pa_eLHR$ACC)
+# 
+# Pa_eLHR_RH <- filter(Pa_eLHR, SLR == "Right Hands")
+# psych::describe(Pa_eLHR_RH$ACC)
+# 
+# Pa_eLHR_LH <- filter(Pa_eLHR, SLR == "Left Hands")
+# psych::describe(Pa_eLHR_LH$ACC)
+# 
+# Pa_mLHR <- filter(Pa_LHR, Strength == "Mixed")
+# psych::describe(Pa_mLHR$ACC)
+# 
+# Pa_mLHR_RH <- filter(Pa_mLHR, SLR == "Right Hands")
+# psych::describe(Pa_mLHR_RH$ACC)
+# 
+# Pa_mLHR_LH <- filter(Pa_mLHR, SLR == "Left Hands")
+# psych::describe(Pa_mLHR_LH$ACC)
+
+```
+
+```{r}
+# Pa_mLHR_RH_Right_Finger <- filter(Pa_mLHR_RH, version == "Response with Right Finger")
+# psych::describe(Pa_mLHR_RH_Right_Finger$RT)
+# 
+# Pa_mLHR_LH_Right_Finger <- filter(Pa_mLHR_LH, version == "Response with Right Finger")
+# psych::describe(Pa_mLHR_LH_Right_Finger$RT)
+# 
+# Pa_eLHR_RH_Right_Finger <- filter(Pa_eLHR_RH, version == "Response with Right Finger")
+# psych::describe(Pa_eLHR_RH_Right_Finger$RT)
+# 
+# Pa_eLHR_LH_Right_Finger <- filter(Pa_eLHR_LH, version == "Response with Right Finger")
+# psych::describe(Pa_eLHR_LH_Right_Finger$RT)
+# 
+# Pa_eRHR_RH_Right_Finger <- filter(Pa_eRHR_RH, version == "Response with Right Finger")
+# psych::describe(Pa_eRHR_RH_Right_Finger$RT)
+# 
+# Pa_eRHR_LH_Right_Finger <- filter(Pa_eRHR_LH, version == "Response with Right Finger")
+# psych::describe(Pa_eRHR_LH_Right_Finger$RT)
+
+```
+
+
+```{r}
+# Pa_L_Finger <- filter(Pa, version == "Response with Left Finger")
+# psych::describe(Pa_L_Finger$ACC)
+# 
+# Pa_L_Finger_RH <- filter(Pa_L_Finger, SLR == "Right Hands")
+# psych::describe(Pa_L_Finger_RH$ACC)
+# 
+# 
+# Pa_L_Finger_LH <- filter(Pa_L_Finger, SLR == "Left Hands")
+# psych::describe(Pa_L_Finger_LH$ACC)
+# 
+# 
+# Pa_R_Finger <- filter(Pa, version == "Response with Right Finger")
+# 
+# Pa_R_Finger_RH <- filter(Pa_R_Finger, SLR == "Right Hands")
+# psych::describe(Pa_R_Finger_RH$ACC)
+# 
+# 
+# 
+# Pa_R_Finger_LH <- filter(Pa_R_Finger, SLR == "Left Hands")
+# psych::describe(Pa_R_Finger_LH$ACC)
+
+
+```
+
+
+```{r}
+# Po <- filter(Logfile, GestureType == "Pointer")
+# 
+# Po_RHR <- filter(Po, Lat2 == "Righty")
+# psych::describe(Po_RHR$ACC)
+# 
+# Po_eRHR <- filter(Po_RHR, Strength == "Extreme")
+# psych::describe(Po_eRHR$ACC)
+# 
+# Po_eRHR_RH <- filter(Po_eRHR, SLR == "Right Hands")
+# psych::describe(Po_eRHR_RH$ACC)
+# 
+# Po_eRHR_LH <- filter(Po_eRHR, SLR == "Left Hands")
+# psych::describe(Po_eRHR_LH$ACC)
+# 
+# Po_mRHR <- filter(Po_RHR, Strength == "Mixed")
+# psych::describe(Po_mRHR$ACC)
+# 
+# Po_mRHR_RH <- filter(Po_mRHR, SLR == "Right Hands")
+# psych::describe(Po_mRHR_RH$ACC)
+# 
+# Po_mRHR_LH <- filter(Po_mRHR, SLR == "Left Hands")
+# psych::describe(Po_mRHR_LH$ACC)
+# 
+# Po_LHR <- filter(Po, Lat2 == "Lefty")
+# psych::describe(Po_LHR$ACC)
+# 
+# Po_eLHR <- filter(Po_LHR, Strength == "Extreme")
+# psych::describe(Po_eLHR$ACC)
+# 
+# Po_eLHR_RH <- filter(Po_eLHR, SLR == "Right Hands")
+# psych::describe(Po_eLHR_RH$ACC)
+# 
+# Po_eLHR_LH <- filter(Po_eLHR, SLR == "Left Hands")
+# psych::describe(Po_eLHR_LH$ACC)
+# 
+# Po_mLHR <- filter(Po_LHR, Strength == "Mixed")
+# psych::describe(Po_mLHR$ACC)
+# 
+# Po_mLHR_RH <- filter(Po_mLHR, SLR == "Right Hands")
+# psych::describe(Po_mLHR_RH$ACC)
+# 
+# Po_mLHR_LH <- filter(Po_mLHR, SLR == "Left Hands")
+# psych::describe(Po_mLHR_LH$ACC)
+
+```
+
+```{r}
+# Po_L_Finger <- filter(Po, version == "Response with Left Finger")
+# psych::describe(Po_L_Finger$ACC)
+# 
+# Po_L_Finger_RH <- filter(Po_L_Finger, SLR == "Right Hands")
+# psych::describe(Po_L_Finger_RH$ACC)
+# 
+# 
+# Po_L_Finger_LH <- filter(Po_L_Finger, SLR == "Left Hands")
+# psych::describe(Po_L_Finger_LH$ACC)
+# 
+# 
+# Po_R_Finger <- filter(Po, version == "Response with Right Finger")
+# 
+# Po_R_Finger_RH <- filter(Po_R_Finger, SLR == "Right Hands")
+# psych::describe(Po_R_Finger_RH$ACC)
+
+
+
+# Po_R_Finger_LH <- filter(Po_R_Finger, SLR == "Left Hands")
+# psych::describe(Po_R_Finger_LH$ACC)
+# 
+
+```
+
+```{r}
+# Po_mHR <- filter(Po, Strength == "Mixed")
+# 
+# Po_mHR_RH_Right_Finger <- filter(Po_mHR, SLR == "Right Hands",
+#                                  version == "Response with Right Finger")
+# psych::describe(Po_mHR_RH_Right_Finger$RT)
+# 
+# Po_mHR_LH_Right_Finger <- filter(Po_mHR, SLR == "Left Hands",
+#                                  version == "Response with Right Finger")
+# psych::describe(Po_mHR_LH_Right_Finger$RT)
+
+```
+# Descriptive for manuscript
+
+```{r}
+Mixed_LHR_LH <- Logfile %>% 
+  filter(Lat2 == "Lefty",
+         Strength == "Mixed",
+         SLR == "Left Hands")
+psych::describe(Mixed_LHR_LH$ACC)
+psych::describe(Mixed_LHR_LH$RT)
+
+```
+
+```{r}
+Mixed_LHR_RH <- Logfile %>% 
+  filter(Lat2 == "Lefty",
+         Strength == "Mixed",
+         SLR == "Right Hands")
+psych::describe(Mixed_LHR_RH$ACC)
+psych::describe(Mixed_LHR_RH$RT)
+
+```
+
+```{r}
+Extreme_LHR_LH <- Logfile %>% 
+  filter(Lat2 == "Lefty",
+         Strength == "Extreme",
+         SLR == "Left Hands")
+psych::describe(Extreme_LHR_LH$ACC)
+psych::describe(Extreme_LHR_LH$RT)
+
+```
+
+```{r}
+Extreme_LHR_RH <- Logfile %>% 
+  filter(Lat2 == "Lefty",
+         Strength == "Extreme",
+         SLR == "Right Hands")
+psych::describe(Extreme_LHR_RH$ACC)
+psych::describe(Extreme_LHR_RH$RT)
+
+```
+
+```{r}
+Mixed_RHR_LH <- Logfile %>% 
+  filter(Lat2 == "Righty",
+         Strength == "Mixed",
+         SLR == "Left Hands")
+psych::describe(Mixed_RHR_LH$ACC)
+psych::describe(Mixed_RHR_LH$RT)
+
+```
+
+```{r}
+Mixed_RHR_RH <- Logfile %>% 
+  filter(Lat2 == "Righty",
+         Strength == "Mixed",
+         SLR == "Right Hands")
+psych::describe(Mixed_RHR_RH$ACC)
+psych::describe(Mixed_RHR_RH$RT)
+
+```
+
+```{r}
+Extreme_RHR_LH <- Logfile %>% 
+  filter(Lat2 == "Righty",
+         Strength == "Extreme",
+         SLR == "Left Hands")
+psych::describe(Extreme_RHR_LH$ACC)
+psych::describe(Extreme_RHR_LH$RT)
+
+```
+
+```{r}
+Extreme_RHR_RH <- Logfile %>% 
+  filter(Lat2 == "Righty",
+         Strength == "Extreme",
+         SLR == "Right Hands")
+psych::describe(Extreme_RHR_RH$ACC)
+psych::describe(Extreme_RHR_RH$RT)
+
+```
+
+** 2 way ANOVA for extreme handers **
+ACC
+```{r}
+eHR <- filter(Logfile, Strength == "Extreme")
+
+SLR_Lat2_acc_ex <- aov_car(ACC~SLR*Lat2+
+            Error(subject/(SLR)),  data=eHR, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(SLR_Lat2_acc_ex)) ##call for formatted ANOVA table using knitr
+```
+```{r}
+
+SLR_Lat2_RT_ex <- aov_car(RT~SLR*Lat2+
+            Error(subject/(SLR)),  data=eHR, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(SLR_Lat2_RT_ex)) ##call for formatted ANOVA table using knitr
+```
+
+** t test for extreme lefty **
+```{r}
+Extreme_Lefty <- read_csv("~/Desktop/Handedness/Data_new/Step1/extreme_lefty.csv")
+
+t_EL_acc <- t.test(Extreme_Lefty$L_ACC, Extreme_Lefty$R_ACC, paired = TRUE, var.equal = TRUE)
+t_EL_acc
+
+t_EL_rt <- t.test(Extreme_Lefty$L_RT, Extreme_Lefty$R_RT, paired = TRUE, var.equal = TRUE)
+t_EL_rt
+```
+
+** t test for extreme righty **
+```{r}
+Extreme_Righty <- read_csv("~/Desktop/Handedness/Data_new/Step1/extreme_righty.csv")
+
+t_ER_acc <- t.test(Extreme_Righty$L_ACC, Extreme_Righty$R_ACC, paired = TRUE, var.equal = TRUE)
+t_ER_acc
+
+t_ER_rt <- t.test(Extreme_Righty$L_RT, Extreme_Righty$R_RT, paired = TRUE, var.equal = TRUE)
+t_ER_rt
+```
+
+** 2 way ANOVA for mixed handers **
+```{r}
+mHR <- filter(Logfile, Strength == "Mixed")
+
+SLR_Lat2_acc_mixed <- aov_car(ACC~SLR*Lat2+
+            Error(subject/(SLR)),  data=mHR, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(SLR_Lat2_acc_mixed)) ##call for formatted ANOVA table using knitr
+```
+
+```{r}
+Lat2_SLR_acc_Interaction<-lsmeans(SLR_Lat2_acc_mixed, ~(Lat2*SLR))
+Lat2_SLR_acc_Interaction
+
+pairs(Lat2_SLR_acc_Interaction)
+
+```
+
+```{r}
+SLR_Lat2_rt_mixed <- aov_car(RT~SLR*Lat2+
+            Error(subject/(SLR)),  data=mHR, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(SLR_Lat2_rt_mixed)) ##call for formatted ANOVA table using knitr
+```
+```{r}
+Lat2_SLR_rt_Interaction<-lsmeans(SLR_Lat2_rt_mixed, ~(Lat2*SLR))
+Lat2_SLR_rt_Interaction
+
+pairs(Lat2_SLR_rt_Interaction)
+
+```
+
+```{r}
+mLHR_L <- filter(Logfile, Lat2 == "Lefty",
+               Strength == "Mixed",
+               SLR == "Left Hands")
+psych::describe(mLHR_L$ACC)
+psych::describe(mLHR_L$RT)
+
+
+mLHR_R <- filter(Logfile, Lat2 == "Lefty",
+               Strength == "Mixed",
+               SLR == "Right Hands")
+psych::describe(mLHR_R$ACC)
+psych::describe(mLHR_R$RT)
+
+
+```
+
+** t test for mixed lefty **
+```{r}
+Mixed_Lefty <- read_csv("~/Desktop/Handedness/Data_new/Step1/Mixed_Lefty.csv")
+
+t_ML_acc <- t.test(Mixed_Lefty$L_ACC, Mixed_Lefty$R_ACC, paired = TRUE, var.equal = TRUE)
+t_ML_acc
+
+t_ML_rt <- t.test(Mixed_Lefty$L_RT, Mixed_Lefty$R_RT, paired = TRUE, var.equal = TRUE)
+t_ML_rt
+```
+
+** t test for mixed righty **
+
+```{r}
+Mixed_Righty <- read_csv("~/Desktop/Handedness/Data_new/Step1/Mixed_Righty.csv")
+
+t_MR <- t.test(Mixed_Righty$L_ACC, Mixed_Righty$R_ACC, paired = TRUE, var.equal = TRUE)
+t_MR
+
+t_MR_rt <- t.test(Mixed_Righty$L_RT, Mixed_Righty$R_RT, paired = TRUE, var.equal = TRUE)
+t_MR_rt
+```
+** mixed left hander left hand vs. mixed right hander left hand **
+```{r}
+t.test(Mixed_Lefty$L_ACC, Mixed_Righty$L_ACC, paired = FALSE, var.equal = TRUE)
+
+t.test(Mixed_Lefty$L_RT, Mixed_Righty$L_RT, paired = FALSE, var.equal = TRUE)
+```
+
+** mixed left hander left hand vs. mixed right hander right hand **
+```{r}
+t.test(Mixed_Lefty$L_ACC, Mixed_Righty$R_ACC, paired = FALSE, var.equal = TRUE)
+
+t.test(Mixed_Lefty$L_RT, Mixed_Righty$R_RT, paired = FALSE, var.equal = TRUE)
+```
+
+** mixed left hander right hand vs. mixed right hander right hand **
+```{r}
+t.test(Mixed_Lefty$R_ACC, Mixed_Righty$R_ACC, paired = FALSE, var.equal = TRUE)
+
+t.test(Mixed_Lefty$R_RT, Mixed_Righty$R_RT, paired = FALSE, var.equal = TRUE)
+```
+
+** mixed left hander right hand vs. mixed right hander left hand **
+```{r}
+t.test(Mixed_Lefty$R_ACC, Mixed_Righty$L_ACC, paired = FALSE, var.equal = TRUE)
+
+t.test(Mixed_Lefty$R_RT, Mixed_Righty$L_RT, paired = FALSE, var.equal = TRUE)
+```
+**Initial 2 way ANOVA**
+```{r}
+SLR_Lat2_acc <- aov_car(ACC~SLR*Lat2+
+            Error(subject/(SLR)),  data=Logfile, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(SLR_Lat2_acc)) ##call for formatted ANOVA table using knitr
+```
+
+**ACC**
+
+
+```{r}
+SLR_Lat2_Strength_acc <- aov_car(ACC~SLR*Lat2*Strength+
+            Error(subject/(SLR)),  data=Logfile, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(SLR_Lat2_Strength_acc)) ##call for formatted ANOVA table using knitr
+```
+
+```{r}
+Lat2_Strength_acc_Interaction<-lsmeans(SLR_Lat2_Strength_acc, ~(Lat2*Strength))
+Lat2_Strength_acc_Interaction
+```
+
+```{r}
+pairs(Lat2_Strength_acc_Interaction)
+```
+
+```{r}
+contrast(Lat2_Strength_acc_Interaction, alpha=0.05, method="pairwise", adjust="Tukey")
+```
+
+```{r}
+SLR_Lat2_Strength_acc_Interaction<-lsmeans(SLR_Lat2_Strength_acc, ~SLR|(Lat2*Strength))
+SLR_Lat2_Strength_acc_Interaction
+```
+
+```{r}
+pairs(SLR_Lat2_Strength_acc_Interaction)
+```
+```{r}
+contrast(SLR_Lat2_Strength_acc_Interaction, alpha=0.05, method="pairwise", adjust="Tukey")
+```
+
+
+```{r}
+update(pairs(SLR_Lat2_Strength_acc_Interaction, by = "SLR"), by = NULL)
+```
+** Gesture Type **
+
+```{r}
+# SLR_Lat2_Strength_acc <- aov_car(ACC~SLR*Lat2*Strength*GestureType+
+#             Error(subject/(SLR*GestureType)),  data=Logfile, anova_table = list(es = "pes"))     
+# 
+# knitr::kable(nice(SLR_Lat2_Strength_acc)) ##call for formatted ANOVA table using knitr
+```
+
+```{r}
+# Lat2_Strength_acc_Interaction<-lsmeans(SLR_Lat2_Strength_acc, ~(Lat2*Strength))
+# Lat2_Strength_acc_Interaction
+```
+
+```{r}
+# pairs(Lat2_Strength_acc_Interaction)
+```
+
+```{r}
+# acc_Interaction2 <-lsmeans(SLR_Lat2_Strength_acc, ~SLR|(Lat2*Strength))
+# acc_Interaction2
+```
+
+```{r}
+# pairs(acc_Interaction2)
+```
+
+```{r}
+# update(pairs(acc_Interaction2, by = "SLR"), by = NULL)
+```
+
+
+```{r}
+# acc_Interaction3 <-lsmeans(SLR_Lat2_Strength_acc, ~(Lat2*Strength*GestureType))
+# acc_Interaction3
+```
+
+```{r}
+# pairs(acc_Interaction3)
+```
+
+```{r}
+# ELL
+ELL <- filter(Logfile, Lat2 == "Lefty") %>% 
+  filter(Strength == "Extreme") %>% filter(SLR == "Left Hands")
+
+Ex_LL <- ELL %>% 
+  summarize(
+    mean_ELL_ACC = mean(ACC),
+    se_ELL_ACC = sd(ACC)/sqrt(nrow(ELL)),
+    mean_ELL_RT = mean(RT),
+    se_ELL_RT = sd(RT)/sqrt(nrow(ELL))
+  )
+
+# ELR
+ELR <- filter(Logfile, Lat2 == "Lefty") %>% 
+  filter(Strength == "Extreme") %>% filter(SLR == "Right Hands")
+
+Ex_LR <- ELR %>% 
+  summarize(
+    mean_ELR_ACC = mean(ACC),
+    se_ELR_ACC = sd(ACC)/sqrt(nrow(ELR)),
+    mean_ELR_RT = mean(RT),
+    se_ELR_RT = sd(RT)/sqrt(nrow(ELR))
+  )
+
+
+# MLL
+MLL <- filter(Logfile, Lat2 == "Lefty") %>% 
+  filter(Strength == "Mixed") %>% filter(SLR == "Left Hands")
+Mixed_LL <- MLL %>% 
+  summarize(
+    mean_MLL_ACC = mean(ACC),
+    se_MLL_ACC = sd(ACC)/sqrt(nrow(MLL)),
+    mean_MLL_RT = mean(RT),
+    se_MLL_RT = sd(RT)/sqrt(nrow(MLL))
+  )
+
+# MLR
+MLR <- filter(Logfile, Lat2 == "Lefty") %>% 
+  filter(Strength == "Mixed") %>% filter(SLR == "Right Hands")
+Mixed_LR <- MLR %>% 
+  summarize(
+    mean_MLR_ACC = mean(ACC),
+    se_MLR_ACC = sd(ACC)/sqrt(nrow(MLR)),
+    mean_MLR_RT = mean(RT),
+    se_MLR_RT = sd(RT)/sqrt(nrow(MLR))
+  )
+
+# MRL
+MRL <- filter(Logfile, Lat2 == "Righty") %>% 
+  filter(Strength == "Mixed") %>% filter(SLR == "Left Hands")
+Mixed_RL <- MRL %>% 
+  summarize(
+    mean_MRL_ACC = mean(ACC),
+    se_MRL_ACC = sd(ACC)/sqrt(nrow(MRL)),
+    mean_MRL_RT = mean(RT),
+    se_MRL_RT = sd(RT)/sqrt(nrow(MRL))
+  )
+
+# MRR
+MRR <- filter(Logfile, Lat2 == "Righty") %>% 
+  filter(Strength == "Mixed") %>% filter(SLR == "Right Hands")
+Mixed_RR <- MRR %>% 
+  summarize(
+    mean_MRR_ACC = mean(ACC),
+    se_MRR_ACC = sd(ACC)/sqrt(nrow(MRR)),
+    mean_MRR_RT = mean(RT),
+    se_MRR_RT = sd(RT)/sqrt(nrow(MRR))
+  )
+
+# ERL
+ERL <- filter(Logfile, Lat2 == "Righty") %>% 
+  filter(Strength == "Extreme") %>% filter(SLR == "Left Hands")
+Ex_RL <- ERL %>% 
+  summarize(
+    mean_ERL_ACC = mean(ACC),
+    se_ERL_ACC = sd(ACC)/sqrt(nrow(ERL)),
+    mean_ERL_RT = mean(RT),
+    se_ERL_RT = sd(RT)/sqrt(nrow(ERL))
+  )
+
+# ERR
+ERR <- filter(Logfile, Lat2 == "Righty") %>% 
+  filter(Strength == "Extreme") %>% filter(SLR == "Right Hands")
+Ex_RR <- ERR %>% 
+  summarize(
+    mean_ERR_ACC = mean(ACC),
+    se_ERR_ACC = sd(ACC)/sqrt(nrow(ERR)),
+    mean_ERR_RT = mean(RT),
+    se_ERR_RT = sd(RT)/sqrt(nrow(ERR))
+  )
+
+```
+
+
+```{r}
+
+# LT <- filter(Logfile, Lat2 == "Lefty")
+# levels(LT$Strength)[levels(LT$Strength)=="Mixed"] <- "Mixed Left-hander"
+# levels(LT$Strength)[levels(LT$Strength)=="Extreme"] <- "Extreme Left-hander"
+# 
+# RT <- filter(Logfile, Lat2 == "Righty")
+# levels(RT$Strength)[levels(RT$Strength)=="Mixed"] <- "Mixed Right-hander"
+# levels(RT$Strength)[levels(RT$Strength)=="Extreme"] <- "Extreme Right-hander"
+# 
+# pd <- position_dodge(0.1) # move them .05 to the left and right
+# p_LT <-ggplot(data = LT,aes(x = Strength, color = as.factor(SLR), group = SLR, y = ACC)) +
+#   stat_summary(fun.y = mean, geom = "point", size =5, shape=21, fill="white") +
+#   stat_summary(fun.y = mean, geom = "line", size = 1.2) +
+#   stat_summary(fun.data = "mean_se", geom="errorbar", width = .5, position = pd) +
+#   scale_x_discrete(limits = c("Extreme Left-hander", "Mixed Left-hander"), labels = function(labels){
+#     fixedLabels <- c()
+#     for (l in 1:length(labels)){
+#       fixedLabels[l] <-paste0(ifelse(l %% 2 == 0, '', '\n'), labels[l])
+#     }
+#     return(fixedLabels)
+#   })+
+#   scale_y_continuous(breaks = seq(0, 1, by=0.1), limits=c(0,1))+
+#   labs(x= "Strength", y="ACC", color="", fill="Hand-tested")  + theme_classic() +     
+#   theme(text=element_text(face="bold", size=20), legend.position = "none", axis.title.x=element_blank())
+# 
+# p_ACC <-ggplot(data = RT,aes(x = Strength, color = as.factor(SLR), group = SLR, y = ACC)) +
+#   stat_summary(fun.y = mean, geom = "point", size =5, shape=21, fill="white") +
+#   stat_summary(fun.y = mean, geom = "line", size = 1.2) +
+#     scale_x_discrete(labels = function(labels){
+#     fixedLabels <- c()
+#     for (l in 1:length(labels)){
+#       fixedLabels[l] <-paste0(ifelse((l+1) %% 2 == 0, '', '\n'), labels[l])
+#     }
+#     return(fixedLabels)
+#   })+
+#   stat_summary(fun.data = "mean_se", geom="errorbar", width = .5, position = pd) +
+#   scale_y_continuous(breaks = seq(0, 1, by=0.1), limits=c(0,1), position = "right", alpha(1))+
+#   labs(color="", fill="Hand-tested")  + theme_classic() +     
+#   theme(text=element_text(face="bold", size=20), axis.title.y=element_blank(), axis.text.y=element_blank(),
+#   axis.title.x=element_blank())+ annotate("text", x = 1, y = 0.97, label = "*", color = "black", size = 16)
+
+
+# Figure5a <- ggarrange(p_LT, p_RT, widths = c(0.8, 1),
+#                 ncol = 2, nrow = 1)
+# 
+# #Figure5a_ud <- annotate_figure(Figure5a, bottom = text_grob("Strength", color = "black", face = "bold", size = 23, fig.lab.pos = "bottom"))
+# Figure5a
+# 
+# ggsave("5a.png", width = 10, height = 6)
+```
+
+**ACC VERSION**
+
+```{r}
+SLR_Lat2_Strength_version_acc <- aov_car(ACC~SLR*Lat2*Strength*version+
+            Error(subject/(SLR)),  data=Logfile, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(SLR_Lat2_Strength_version_acc)) ##call for formatted ANOVA table using knitr
+```
+```{r}
+SLR_Lat2_Strength_Interaction<-lsmeans(SLR_Lat2_Strength_version_acc, ~(Lat2*Strength))
+SLR_Lat2_Strength_Interaction
+```
+
+```{r}
+pairs(SLR_Lat2_Strength_Interaction)
+```
+
+```{r}
+SLR_version_Interaction<-lsmeans(SLR_Lat2_Strength_version_acc, ~(SLR|version))
+SLR_version_Interaction
+```
+
+```{r}
+pairs(SLR_version_Interaction)
+```
+
+```{r}
+update(pairs(SLR_version_Interaction, by = "SLR"), by = NULL)
+```
+
+```{r}
+SLR_Lat2_Strength_Interaction<-lsmeans(SLR_Lat2_Strength_version_acc, ~SLR|(Lat2*Strength))
+SLR_Lat2_Strength_Interaction
+```
+
+```{r}
+pairs(SLR_Lat2_Strength_Interaction)
+```
+
+```{r}
+update(pairs(SLR_Lat2_Strength_Interaction, by = "SLR"), by = NULL)
+```
+
+
+```{r}
+SLR_Lat2_Strength_version_acc_Interaction<-lsmeans(SLR_Lat2_Strength_version_acc, ~SLR|(version*Strength))
+SLR_Lat2_Strength_version_acc_Interaction
+```
+
+```{r}
+pairs(SLR_Lat2_Strength_version_acc_Interaction)
+```
+
+```{r}
+update(pairs(SLR_Lat2_Strength_version_acc_Interaction, by = "SLR"), by = NULL)
+```
+
+
+** strategy **
+
+```{r}
+STR <- filter(Logfile, Strategy == "Mental Rotation"|Strategy == "Thumb Strategy")
+```
+
+```{r}
+SLR_Lat2_Strength_Strategy_acc <- aov_car(ACC~SLR*Lat2*Strength*Strategy+
+            Error(subject/(SLR)),  data=STR, anova_table = list(es = "pes"))     
+
+knitr::kable(nice(SLR_Lat2_Strength_Strategy_acc)) ##call for formatted ANOVA table using knitr
+```
+```{r}
+SLR_Lat2_Strength_Strateg_Interaction<-lsmeans(SLR_Lat2_Strength_Strategy_acc, ~(SLR|Lat2*Strength*Strategy))
+SLR_Lat2_Strength_Strateg_Interaction
+```
+
+```{r}
+pairs(SLR_Lat2_Strength_Strateg_Interaction)
+```

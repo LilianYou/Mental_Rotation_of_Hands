@@ -1,0 +1,118 @@
+---
+title: "step0_2"
+author: "Lily Cheng"
+date: "11/27/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(psych)
+library(tidyr)
+library(nlme)
+library(multcomp)
+library(ggpubr)
+library(ggplot2)
+library(lme4)
+library(lsmeans)
+library(afex)
+library(dplyr)
+library(stargazer)
+library(effsize)
+library(pwr)
+library(lsr)
+```
+
+descriptive stats
+```{r}
+Logfile <- read_csv("~/Desktop/Handedness/Data/Step0/t_test_rt.csv")
+View(Logfile)
+str(Logfile)
+summary(Logfile)
+```
+
+SEX rt
+```{r}
+t_sex <- t.test(Logfile$male, Logfile$female, var.equal = TRUE)
+t_sex
+```
+
+```{r}
+psych::describe(Logfile$female)
+psych::describe(Logfile$male)
+```
+
+```{r}
+effect_size_sex <- effsize::cohen.d(Logfile$male, Logfile$female, paired = FALSE, na.rm = TRUE)
+effect_size_sex
+```
+
+Handedness rt
+
+```{r}
+t_handedness <- t.test(Logfile$lefty, Logfile$righty, var.equal = TRUE)
+t_handedness
+```
+
+```{r}
+psych::describe(Logfile$lefty)
+psych::describe(Logfile$righty)
+```
+
+```{r}
+effect_size_handedness <- effsize::cohen.d(Logfile$lefty, Logfile$righty, paired = FALSE, na.rm = TRUE)
+effect_size_handedness
+```
+
+Strength rt
+```{r}
+t_strength <- t.test(Logfile$mixed, Logfile$extreme, var.equal = TRUE)
+t_strength
+```
+
+```{r}
+psych::describe(Logfile$mixed)
+psych::describe(Logfile$extreme)
+```
+
+```{r}
+effect_size_strength <- effsize::cohen.d(Logfile$mixed, Logfile$extreme, paired = FALSE, na.rm = TRUE)
+effect_size_strength
+```
+
+Strategy
+
+```{r}
+t_strategy <- t.test(Logfile$mrt, Logfile$thumb, var.equal = TRUE)
+t_strategy
+```
+
+```{r}
+psych::describe(Logfile$mrt)
+psych::describe(Logfile$thumb)
+```
+
+```{r}
+effect_size_strategy <- effsize::cohen.d(Logfile$mrt, Logfile$thumb, paired = FALSE, na.rm = TRUE)
+effect_size_strategy
+```
+
+Response Pattern
+```{r}
+t_RP <- t.test(Logfile$version1, Logfile$version2, var.equal = TRUE)
+t_RP
+```
+
+```{r}
+psych::describe(Logfile$version1)
+psych::describe(Logfile$version2)
+```
+
+```{r}
+effect_size_RP <- effsize::cohen.d(Logfile$version1, Logfile$version2, paired = FALSE, na.rm = TRUE)
+effect_size_RP
+```
